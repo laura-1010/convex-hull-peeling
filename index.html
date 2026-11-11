@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Area-Weighted Convex Hull Peeling | INFO-F420</title>
+<style>
+
+:root{
+  --color-1: #FAFAFF;
+  --color-2: #E3F9F1;
+  --color-3: #4CD3A6;
+  --color-4: #6C4AB6;
+  --color-5: #2B2350;
+  --muted: #716A89;
+  font-family:'DM Sans',sans-serif; color:var(--color-5); background:var(--color-1);
+  scroll-behavior:smooth;
+}
+*{box-sizing:border-box}body{margin:0}h1,h2,h3,button,.panel-heading{font-family:'Space Grotesk',sans-serif}h1,h2,h3{letter-spacing:-.045em}p{line-height:1.82}a{color:var(--color-4);text-decoration-thickness:1px;text-underline-offset:3px}a:hover{color:var(--color-5)}
+main{width:min(1320px,100%);margin:0 auto;padding:0 38px}header{padding:0;background:transparent;color:var(--color-5);box-shadow:none;border-radius:0;position:relative;overflow:visible}
+.site-top{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #ded9ea;padding:23px 0 18px}.brand{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;letter-spacing:-.04em}.brand i{display:inline-block;width:12px;height:12px;transform:rotate(45deg);margin-right:11px;background:var(--color-3)}.course{font-size:11px;text-transform:uppercase;font-weight:700;letter-spacing:.14em;color:var(--color-4)}
+.hero-grid{position:relative;display:grid;grid-template-columns:1.13fr .87fr;gap:40px;padding:70px 0 66px;align-items:center}.hero-copy{position:relative;z-index:2}.overline{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--color-4);font-weight:700;margin:0 0 23px}.hero-copy h1{font-size:clamp(3.4rem,7.4vw,6.5rem);line-height:.99;font-weight:700;letter-spacing:-.075em;margin:0;max-width:780px}.hero-copy h1 em{font-style:normal;color:var(--color-4)}.hero-lead{max-width:530px;font-size:16px;color:#595274;margin:30px 0 25px;line-height:1.8}.hero-actions{display:flex;gap:24px;align-items:center;flex-wrap:wrap}.hero-button{display:inline-block;padding:14px 24px;background:var(--color-4);color:#fff;border-radius:3px;font-size:13px;font-weight:700;text-decoration:none}.hero-button:hover{background:var(--color-5);color:#fff}.hero-link{font-size:13px;font-weight:700;color:var(--color-5);text-decoration:none}.hero-link:hover{color:var(--color-4)}
+.hero-art{background:var(--color-2);border-radius:50% 50% 47% 53% / 48% 54% 46% 52%;padding:20px;box-shadow:none;position:relative;transform:rotate(-4deg)}.hero-art svg{display:block;width:100%;transform:rotate(4deg)}.hero-art-caption{display:none}.orb{position:absolute;width:72px;height:72px;border:8px solid var(--color-3);border-radius:50%;right:3%;top:-11%;transform:rotate(12deg)}
+.toc{display:flex;position:relative;align-items:center;gap:8px;flex-wrap:wrap;background:var(--color-2);border-top:2px solid var(--color-3);border-bottom:0;padding:16px 19px;margin:0 -19px 58px;border-radius:2px}.toc strong{font-size:10px;letter-spacing:.12em;color:var(--color-5);padding-right:13px}.toc a{padding:7px 11px;font-size:12px;color:var(--color-5);text-decoration:none;background:transparent;border:1px solid transparent;border-radius:4px}.toc a:hover{border-color:var(--color-4);background:#fff}
+.report-section{scroll-margin-top:24px;max-width:1050px;margin:0 auto;padding:45px 0 48px;background:none;border:0;border-top:1px solid #ded9ea;border-radius:0;box-shadow:none}.report-section h2{font-size:clamp(1.9rem,3.5vw,2.9rem);line-height:1.1;margin:0 0 24px;max-width:850px}.report-section p{font-size:15px;color:#56516b;max-width:850px;margin:15px 0}.report-section strong{color:var(--color-5)}.report-section:nth-of-type(odd){border-top-color:#cfc7e3}
+.section-heading{max-width:1120px;margin:12px auto 22px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px}.section-heading h2{font-size:clamp(2rem,4vw,3.4rem);letter-spacing:-.065em;margin:7px 0 6px}.section-heading p{margin:0;color:#655e7d}.section-kicker{color:var(--color-4)!important;letter-spacing:.14em;font-size:11px!important;font-weight:700}.mini-tag{background:var(--color-2);color:var(--color-5);font-size:12px;border-radius:3px;padding:10px 14px;font-weight:700}
+.layout{scroll-margin-top:24px;max-width:1180px;margin:0 auto 77px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:0;box-shadow:18px 20px 0 var(--color-2);border:2px solid var(--color-5)}.panel{background:#fff;border:0;border-radius:0;padding:23px;box-shadow:none}.layout>.panel:first-child{border-right:2px solid var(--color-5)}.layout>aside{background:var(--color-2);padding:26px}.panel-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:17px}.panel-heading{font-weight:700;font-size:16px}.panel-pill{padding:6px 9px;background:var(--color-2);color:var(--color-5);border-radius:3px;font-size:11px}
+canvas{width:100%;height:auto;display:block;background:var(--color-1);border:1px solid #e0dce9;border-radius:0;cursor:crosshair;touch-action:manipulation}.legend{display:flex;flex-wrap:wrap;gap:13px;margin:17px 0;color:#5a5473;font-size:11px}.dot{display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:50%}.buttons{display:flex;gap:9px;flex-wrap:wrap;margin:19px 0 8px}button,select{font:inherit;font-size:13px;background:#fff;border:1px solid #aaa0c2;color:var(--color-5);padding:12px 15px;border-radius:3px;cursor:pointer}button:hover:not(:disabled){background:var(--color-2)}button.primary{background:var(--color-4);border-color:var(--color-4);color:#fff;font-weight:700}button.primary:hover:not(:disabled){background:var(--color-5)}button:disabled{opacity:.4;cursor:not-allowed}label{font-size:12px;font-weight:700;display:block;margin:9px 0 9px}select{width:100%;max-width:100%}.stat{padding:16px 0;border-bottom:1px solid #c3ddd4;display:flex;justify-content:space-between;align-items:center;gap:12px}.stat:last-child{border:0}.stat span{font-size:12px;color:#5b5674;line-height:1.4}.stat strong{font-family:'Space Grotesk',sans-serif;font-size:22px;color:var(--color-5)}.small{font-size:12px!important;color:#777088!important}
+.formula{background:var(--color-2);border-left:5px solid var(--color-3);border-radius:0;padding:22px 15px;text-align:center;font-family:Georgia,serif;font-size:clamp(15px,2.3vw,20px);overflow-x:auto;color:var(--color-5)}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14px}th,td{text-align:left;border-bottom:1px solid #ded9e8;padding:13px 15px}th{background:var(--color-2);color:var(--color-5);font-size:12px}td{color:#514c66}.steps{padding-left:25px}.steps li{padding:7px 0;line-height:1.7}pre{background:var(--color-5);color:#f7f5ff;border-radius:3px;padding:22px;overflow:auto;white-space:pre-wrap;font-size:13px;line-height:1.7}.note{margin-top:24px;padding:17px 19px;border-left:5px solid var(--color-4);background:#f0ebfb;color:var(--color-5);border-radius:0}.source{padding-left:24px;line-height:1.85}.site-footer{border-top:2px solid var(--color-5);margin-top:28px;padding:24px 0 48px;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:12px;color:#6d6681}
+@media(max-width:930px){main{padding:0 25px}.hero-grid{grid-template-columns:1fr .85fr;gap:20px}.hero-copy h1{font-size:clamp(3rem,7vw,5rem)}.layout{grid-template-columns:1fr}.layout>.panel:first-child{border-right:0;border-bottom:2px solid var(--color-5)}.layout>aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.layout>aside .panel-top,.layout>aside label,.layout>aside select{grid-column:1/-1}}
+@media(max-width:650px){main{padding:0 18px}.course{font-size:9px}.hero-grid{grid-template-columns:1fr;padding:45px 0 35px}.hero-copy h1{font-size:clamp(3.3rem,13vw,5rem)}.hero-art{max-width:420px;margin:4px auto 0;width:90%}.toc{margin:0 -8px 35px;padding:12px}.toc strong{width:100%}.section-heading{display:block}.mini-tag{display:inline-block;margin-top:15px}.report-section{padding:35px 0}.layout>aside{display:block}.layout{box-shadow:8px 9px 0 var(--color-2)}.panel{padding:14px}.layout>aside{padding:20px}}
+
+/* Text-first edition: typography and spacing without illustrations */
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+h1,h2,h3,button,.panel-heading,.brand{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.hero-grid{display:block;max-width:1040px;padding:74px 0 54px}.hero-copy h1{max-width:900px;font-size:clamp(3.2rem,7vw,6rem)}.hero-lead{max-width:760px}
+.toc{background:transparent;border-top:1px solid #ded9ea;border-bottom:1px solid #ded9ea;border-radius:0;margin:0 0 52px;padding:18px 0}.toc a{background:var(--color-2);margin:2px 3px}
+.report-section{max-width:1030px}.report-section h3{font-size:1.35rem;letter-spacing:-.025em;margin:32px 0 8px}.report-section h4{font-size:1rem;margin:22px 0 6px}.report-section p{max-width:920px}.report-section ul li{line-height:1.85;margin-bottom:8px}
+.example-box{background:var(--color-2);border:1px solid #a9dfcd;border-left:7px solid var(--color-3);padding:26px 30px;margin:34px 0;border-radius:12px}.example-box h3{margin:8px 0 16px}.example-label{display:inline-block;background:var(--color-5);color:#fff;font-size:11px;font-weight:800;letter-spacing:.1em;padding:7px 11px;border-radius:4px}.example-box p{color:var(--color-5)}.example-box table{background:#fff}.example-box th{background:#f4f0ff}
+.key-point{border-left:4px solid var(--color-4);padding:9px 20px;margin:26px 0;background:#f4f0fb}.key-point p{margin:6px 0}.term{font-weight:800;color:var(--color-5)}
+.definition{padding:18px 23px;border:1px solid #d8d1e6;border-radius:10px;background:#fff;margin:20px 0}.definition strong{color:var(--color-4)}
+.formula{font-family:Georgia,"Times New Roman",serif}.demo-intro{color:#5e5576;max-width:850px;line-height:1.75}.report-section .source li{margin-bottom:14px}.site-footer{margin-top:55px}
+@media(max-width:650px){.hero-grid{padding:48px 0 38px}.example-box{padding:20px 16px}.toc{margin-bottom:28px}.hero-copy h1{font-size:clamp(2.8rem,12vw,4.6rem)}}
+
+/* Colorful edition: distinctive mint & violet editorial language, no images */
+:root{--color-1:#FAFAFF;--color-2:#E3F9F1;--color-3:#4CD3A6;--color-4:#6C4AB6;--color-5:#2B2350;--violet-soft:#F0EAFB;--shadow:0 16px 44px rgba(43,35,80,.075)}
+body{background:linear-gradient(180deg,#FAFAFF 0%,#f6f3ff 52%,#FAFAFF 100%);color:var(--color-5)}
+main{width:min(1320px,100%);padding:0 32px}
+header{margin:16px -12px 28px;background:var(--color-5);color:var(--color-1);border-radius:28px;overflow:hidden;box-shadow:0 18px 45px rgba(43,35,80,.16)}
+.site-top{margin:0 36px;padding:22px 0 16px;border-bottom:1px solid rgba(255,255,255,.20)}
+.brand{color:#FAFAFF}.brand i{background:var(--color-3)}.course{color:var(--color-3)}
+.hero-grid{position:relative;display:block;padding:68px 48px 78px;max-width:none;isolation:isolate}
+.hero-grid::before{content:"";position:absolute;right:-125px;top:-145px;width:540px;height:540px;border-radius:50%;background:var(--color-4);opacity:.62;z-index:-1}
+.hero-grid::after{content:"";position:absolute;right:85px;bottom:-115px;width:270px;height:270px;border:30px solid var(--color-3);border-radius:50%;opacity:.88;z-index:-1}
+.hero-copy{max-width:830px}.overline{color:var(--color-3);font-size:12px}
+.hero-copy h1{color:#FAFAFF;font-size:clamp(3.3rem,7.4vw,6.5rem);max-width:840px;text-wrap:balance;text-shadow:0 2px 8px rgba(43,35,80,.12)}
+.hero-copy h1 em{color:var(--color-3)}.hero-lead{color:#e8e3f3;max-width:670px;font-size:17px;line-height:1.75}
+.hero-button{background:var(--color-3);color:var(--color-5);padding:15px 24px;border-radius:12px;box-shadow:0 5px 0 #2ea981}
+.hero-button:hover{background:var(--color-2);color:var(--color-5)}.hero-link{color:#FAFAFF}.hero-link:hover{color:var(--color-3)}
+.toc{background:var(--color-2);border:2px solid #b4efd9;border-radius:17px;margin:0 0 54px;padding:18px 22px;box-shadow:var(--shadow);gap:9px}
+.toc strong{color:var(--color-5)}.toc a{background:#FAFAFF;border:1px solid #cfe9df;color:var(--color-5);border-radius:100px;font-weight:650;padding:9px 14px}
+.toc a:hover{border-color:var(--color-4);background:var(--violet-soft);color:var(--color-4)}
+.section-heading{margin:0 auto 20px;padding:10px 4px}.section-heading h2{color:var(--color-5)}
+.section-kicker{color:var(--color-4)!important}.mini-tag{background:var(--color-4);color:white;border-radius:20px}
+.layout{border:2px solid var(--color-4);border-radius:22px;overflow:hidden;box-shadow:14px 16px 0 #d8f6e9;margin-bottom:90px}
+.layout>.panel:first-child{border-right:2px solid var(--color-4)}.layout>.panel:first-child{background:#fff}.layout>aside{background:var(--color-2)}
+.panel{padding:26px}.panel-heading{color:var(--color-5);font-size:18px}.panel-pill{background:var(--violet-soft);color:var(--color-4);border-radius:20px}
+canvas{border:2px solid #ded6f5;border-radius:14px;background:#FAFAFF}
+button,select{border-radius:10px}.buttons button{font-weight:650}.buttons button.primary{background:var(--color-4)}
+.stat{border-color:#b8e9d8}.stat strong{color:var(--color-4)}
+.report-section{max-width:1080px;padding:44px 48px 50px;margin:24px auto 30px;border:1px solid #dfd7f1;border-radius:22px;background:#fff;box-shadow:var(--shadow)}
+.report-section:nth-of-type(odd){background:#f0fbf7;border:1px solid #c3e9d9}
+.report-section h2{color:var(--color-5);font-size:clamp(1.95rem,3.5vw,2.8rem);margin-bottom:25px;padding-bottom:13px;border-bottom:3px solid var(--color-3)}
+.report-section:nth-of-type(even) h2{border-bottom-color:var(--color-4)}
+.report-section h3{color:var(--color-4);margin-top:34px}.report-section:nth-of-type(odd) h3{color:#386953}
+.report-section p{color:#534e69}.report-section ul li{color:#534e69}
+.definition{background:var(--violet-soft);border:1px solid #ddd0f7;border-left:6px solid var(--color-4);border-radius:13px;padding:20px 25px}
+.key-point{background:#e7f9f0;border-left:6px solid var(--color-3);border-radius:0 12px 12px 0}
+.formula{background:linear-gradient(110deg,var(--color-5),#4e398a);color:#fff;border-left:6px solid var(--color-3);border-radius:13px;padding:24px 18px;font-size:clamp(16px,2.2vw,22px);box-shadow:0 7px 20px rgba(43,35,80,.12)}
+.example-box{background:#e3f9f1;border:2px solid var(--color-3);border-left:9px solid var(--color-4);padding:27px 30px;border-radius:18px;box-shadow:10px 10px 0 #eee8fb}
+.example-box h3{color:var(--color-5)!important}.example-label{background:var(--color-4);color:white;padding:9px 14px;border-radius:100px}
+.example-box th{background:#eae1ff}.example-box td{background:#fff}
+th{background:var(--color-4);color:#fff}tr:nth-child(even) td{background:#f8f5ff}
+pre{border-left:6px solid var(--color-3);border-radius:14px}
+.note{border-radius:12px;background:var(--violet-soft)}
+.site-footer{border-top:3px solid var(--color-3);padding-top:25px}
+@media(max-width:930px){.layout>.panel:first-child{border-right:0;border-bottom:2px solid var(--color-4)}.hero-grid::before{right:-250px;opacity:.35}}
+@media(max-width:650px){main{padding:0 14px}header{margin:10px 0 22px;border-radius:18px}.site-top{margin:0 18px;gap:8px}.hero-grid{padding:48px 24px 58px}.hero-copy h1{font-size:clamp(2.6rem,11.2vw,4.6rem)}.hero-grid::after{right:-140px;bottom:-160px;opacity:.45}.hero-lead{font-size:15px}.toc{padding:14px;margin-bottom:34px}.report-section{padding:27px 19px 30px;margin-bottom:18px;border-radius:16px}.report-section h2{font-size:1.8rem}.example-box{padding:20px 14px;box-shadow:5px 6px 0 #eee8fb}.layout{box-shadow:7px 8px 0 #d8f6e9}.panel{padding:14px}}
+
+</style></head><body><main><header><div class="site-top"><div class="brand"><i></i> GEOMETRY / LAB</div><div class="course">INFO-F420 · RESEARCH PROJECT</div></div><div class="hero-grid"><div class="hero-copy"><p class="overline">Computational geometry · Research explainer</p><h1>Area-weighted<br/>convex hull <em>peeling.</em></h1><p class="hero-lead">A step-by-step explanation of how convex hull area can guide outlier detection, together with an interactive JavaScript demonstration of the greedy rule.</p><div class="hero-actions"><a class="hero-button" href="#demo">Launch experiment ↗</a><a class="hero-link" href="#problem">Explore the theory ↓</a></div></div></div></header><nav aria-label="Report navigation" class="toc"><strong>ON THIS PAGE</strong><a href="#problem">The research problem</a><a href="#concepts">Convex hull &amp; sensitivity</a><a href="#algorithm">Greedy peeling</a><a href="#paper">Efficient algorithm</a><a href="#limitations">Limitations</a><a href="#implementation">How the demo works</a><a href="#references">Bibliography</a></nav><div class="section-heading demo-heading"><div><p class="section-kicker">Experiment with geometric point sets and observe how the maximum-sensitivity choice changes after each removal.</p><h2>Explore the geometry</h2><p>Choose a dataset, then remove one point at a time. The highlighted point is the next greedy candidate.</p></div><span class="mini-tag">Interactive · JavaScript</span></div><div class="layout" id="demo"><section class="panel"><div class="panel-top"><span class="panel-heading">Point cloud</span><span class="panel-pill">Click to add points</span></div><canvas aria-label="Interactive convex hull visualization" height="490" id="plot" width="720"></canvas><div class="legend"><span><i class="dot" style="background:#716A89"></i>Remaining points</span><span><i class="dot" style="background:#6C4AB6"></i>Hull vertices</span><span><i class="dot" style="background:#4CD3A6"></i>Next candidate</span><span><i class="dot" style="background:#B9B2CA"></i>Removed points</span></div><div class="buttons"><button class="primary" id="next">Remove next point</button><button id="reset">Reset dataset</button><button id="undo">Undo</button></div><p class="small">Click on the plot to add points. Adding a point restarts the peeling sequence.</p></section><aside class="panel"><div class="panel-top"><span class="panel-heading">Controls &amp; metrics</span></div><label for="preset">Dataset</label><select id="preset"><option value="cluster">Cluster + outliers</option><option value="uniform">Uniform random</option><option value="circle">Points near a circle</option><option value="collinear">Nearly collinear</option></select><div class="stat"><span>Remaining points</span><strong id="remaining">–</strong></div><div class="stat"><span>Current hull area (coordinate units²)</span><strong id="area">–</strong></div><div class="stat"><span>Next maximum area reduction</span><strong id="delta">–</strong></div><div class="stat"><span>Removed so far</span><strong id="removed">0</strong></div><div class="stat"><span>Next candidate point</span><strong id="candidate">–</strong></div></aside></div>
+<section class="report-section" id="problem">
+<h2>1. The research problem</h2>
+<p><strong>Outlier detection</strong> aims to identify observations that differ from the main structure of a dataset. An unusual point can result from measurement errors, rare events or genuinely meaningful behavior. Identifying potential outliers matters because extreme observations can influence summaries and subsequent analysis.</p>
+<p>This project investigates a geometric criterion for two-dimensional data: instead of measuring how far a point is from an average, we ask how much that point contributes to the area occupied by the complete set. The starting observation is that a distant point can enlarge the convex hull substantially.</p>
+<div class="definition"><strong>Research question</strong><p>Can we rank candidate outliers by repeatedly removing the point that causes the largest decrease in convex hull area—and perform this process efficiently?</p></div>
+<p>In their 2024 paper, Sridhar and Svenning study this <em>area-weighted peeling</em> approach. Their method is a greedy heuristic for a more difficult optimization problem: find a set of <em>k</em> points whose joint removal minimizes the area of the remaining convex hull [1].</p>
+</section>
+<section class="report-section" id="concepts">
+<h2>2. Geometric foundations</h2>
+<h3>2.1 What is a convex hull?</h3>
+<p>The <strong>convex hull</strong> of a point set P is the smallest convex set containing every point in P. A set is convex if the segment joining any two of its points remains entirely inside it. For a finite planar point set, the convex hull is a convex polygon, a line segment or a single point.</p>
+<p>A useful intuition is an elastic band stretched around the outermost points. The points inside the band do not determine its boundary. The vertices on the boundary, however, determine its shape and area.</p>
+<div class="key-point"><p><strong>Why do we examine hull vertices?</strong> Removing a strictly interior point leaves the convex hull unchanged, so the area decrease is zero. A positive area decrease can only come from removing a hull vertex.</p></div>
+<h3>2.2 Measuring polygon area</h3>
+<p>Given the polygon vertices in clockwise or counterclockwise order, its area can be calculated using the <strong>shoelace formula</strong>. This avoids dividing the polygon manually into triangles.</p>
+<div class="formula">Area(H) = ½ | Σ (xᵢ yᵢ₊₁ − xᵢ₊₁ yᵢ) |</div>
+<p>The last vertex is connected back to the first. The absolute value makes the result non-negative regardless of vertex orientation.</p>
+<h3>2.3 Sensitivity: the criterion for removal</h3>
+<p>For a point p, its <strong>sensitivity</strong> σ(p) is the amount by which the convex hull area decreases if that point is removed. This is the quantity optimized by each greedy step [1].</p>
+<div class="formula">σ(p) = Area(CH(P)) − Area(CH(P \ {p}))</div>
+<p>The algorithm compares the sensitivities of current hull vertices and selects a vertex with the largest value. A high sensitivity means that the point makes a large immediate contribution to the current hull area.</p>
+<div class="example-box" id="example"><span class="example-label">WORKED EXAMPLE</span><h3>A numerical example with five points</h3>
+<p>Consider A = (0,0), B = (0,4), C = (4,4), D = (4,0) and E = (3,2). The initial convex hull is the square A–B–C–D with area <strong>16</strong>. E lies inside it.</p>
+<p>To compute the sensitivity of C, remove C temporarily and construct the new hull A–D–E–B. Its area is 10; therefore σ(C) = 16 − 10 = <strong>6</strong>. If B is removed, the remaining hull is triangle A–D–C, of area 8, so σ(B) = <strong>8</strong>.</p>
+<div class="table-scroll"><table><thead><tr><th>Removed point</th><th>Area afterward</th><th>Sensitivity</th></tr></thead><tbody><tr><td>A</td><td>8</td><td>8</td></tr><tr><td>B</td><td>8</td><td>8</td></tr><tr><td>C</td><td>10</td><td>6</td></tr><tr><td>D</td><td>10</td><td>6</td></tr><tr><td>E</td><td>16</td><td>0</td></tr></tbody></table></div>
+<p><strong>Interpretation:</strong> A and B tie for the largest decrease, so either can be removed in the first greedy step. E has sensitivity zero: removing an interior point does not change the hull. These are illustrative values computed from the displayed coordinates, not experimental results reported in [1].</p></div>
+<h3>2.4 What changes when a vertex disappears?</h3>
+<p>After deleting a hull vertex, the new hull may contain points that were previously inside the old hull. It is generally incorrect to update the polygon by simply joining the two neighbors of the removed vertex: additional points may become exposed on the boundary.</p>
+<p>Consequently, the sensitivity of remaining candidates must be evaluated relative to the <em>updated</em> hull. This motivates the more advanced geometric structures used in the research paper.</p>
+</section>
+
+<section class="report-section" id="algorithm">
+<h2>3. Greedy area-weighted peeling</h2>
+<p>The word <strong>peeling</strong> describes an iterative process that removes outer points. Area-weighted peeling chooses a single vertex at a time according to the area reduction it produces. If we want to identify <em>k</em> candidate outliers, the method performs <em>k</em> successive removals [1].</p>
+<ol class="steps"><li>Build the convex hull of the current point set.</li><li>For each hull vertex, calculate the hull area after temporarily removing that vertex.</li><li>Compute its sensitivity as the original area minus the new area.</li><li>Remove a vertex with maximum sensitivity.</li><li>Repeat using the remaining points, until the requested number of removals has been reached.</li></ol>
+<pre><code>for step = 1 ... k:
+    H = convexHull(P)
+    for each vertex p of H:
+        score[p] = area(H) - area(convexHull(P without p))
+    choose p with the largest score[p]
+    P = P without p</code></pre>
+<p>This is a simple <strong>reference algorithm</strong> that captures the selection rule used in the paper. It is not a transcription of the authors' optimized Algorithm 1. In particular, it rebuilds hulls rather than updating geometric structures incrementally.</p>
+<h3>Why is it greedy?</h3>
+<p>Each decision maximizes the <em>immediate</em> area decrease. The method does not examine all possible groups of k deletions. Thus the locally best removal need not be part of the best overall set of k removed points.</p>
+<div class="key-point"><p><strong>Greedy vs. globally optimal:</strong> greedy peeling chooses the next vertex with the greatest sensitivity, whereas an exact k-point solution minimizes the remaining area after all k points are removed together.</p></div>
+</section>
+<section class="report-section" id="paper">
+<h2>4. How the research algorithm becomes fast</h2>
+<p>Recomputing every candidate hull after each removal repeats considerable work. The main technical contribution of Sridhar and Svenning [1] is to implement the same greedy deletion sequence in <strong>O(n log n) total time</strong> and <strong>O(n) space</strong>, using more sophisticated geometric data structures.</p>
+<h3>4.1 Convex layers</h3>
+<p>The first convex layer L¹ is the outer hull. After removing the vertices of that layer, the hull of the remaining points defines the second layer L². This nested structure is useful because some vertices of L² may become visible when a vertex of L¹ is deleted.</p>
+<h3>4.2 Active points</h3>
+<p>For an outer-hull vertex u, the paper calls a point <strong>active for u</strong> if it belongs to the second layer before deleting u and moves to the first layer when u is removed. These new outer vertices determine how the hull changes locally [1].</p>
+<div class="definition"><strong>Simple example</strong><p>Suppose u is a tip of a convex polygon. Directly below it lie three points on the second convex layer. If deleting u causes two of them to become new outer-hull vertices while the third remains inside, only the first two are active for u.</p></div>
+<h3>4.3 Tangent queries</h3>
+<p>To find the relevant section of the second convex layer, the algorithm uses <strong>tangent queries</strong> from the two neighboring vertices of the removed point. Intuitively, a tangent from an exterior point touches a convex polygon at a supporting vertex without cutting through its interior.</p>
+<p>The two tangent points identify the ends of the chain that must be considered. With a suitable representation, a tangent query takes O(log n) time; traversing all active points in the chain takes additional time proportional to their number.</p>
+<h3>4.4 Max-priority queue</h3>
+<p>A <strong>max-priority queue</strong> stores current outer-hull vertices ordered by sensitivity. Its role is different from tangent queries: it finds the <em>next point to delete</em>, rather than locating geometric replacement points.</p>
+<p>For example, if A, B and C have sensitivities 4, 11 and 7 respectively, the queue returns B. Once B is removed, the priorities of affected existing vertices must be updated, and newly exposed vertices are inserted with their own sensitivities.</p>
+<h3>4.5 Dynamic convex hull and local updates</h3>
+<p>The paper also uses a dynamic convex-hull structure to help maintain points beyond the two explicit outer layers. As points move from L² to L¹, previously deeper points may need to enter L².</p>
+<p>An important geometric result is that, among the vertices already present on the old outer hull, only the two former neighbors of the deleted vertex can need sensitivity updates. New outer vertices still require their sensitivities to be computed and inserted in the queue. The paper also bounds the total activity of exposed points over all removals, supporting its amortized complexity argument [1].</p>
+</section>
+<section class="report-section" id="limitations">
+<h2>5. What can go wrong with greedy peeling?</h2>
+<p>The chosen point has the largest area contribution <em>at that moment</em>, but this does not guarantee that the final set of removed points is globally optimal. The paper gives a geometric counterexample (Figure 2) involving nearby outliers positioned far from a main cluster [1].</p>
+<h3>Two outliers that protect each other</h3>
+<p>Imagine two outliers close to one another and far below the rest of the dataset. Removing just one may leave the other holding the hull boundary almost as far out as before. The area decreases very little, so either outlier can have low individual sensitivity. Removing both together, however, may produce a dramatic area decrease.</p>
+<p>A greedy algorithm may prefer other hull vertices first. This does not make the computation incorrect: it reveals the difference between a locally optimal choice and a globally optimal set of k deletions.</p>
+<h3>Interpretation and assumptions</h3>
+<p>The criterion is based solely on geometry. It does not use class labels, measurement uncertainty or the meaning of the underlying data. Different distributions can therefore lead to different removal orders, and ties in sensitivity are possible.</p>
+<p>The theoretical paper assumes points in general position and notes that degeneracies can be addressed by perturbation. A classroom visualization may encounter collinear points and duplicate coordinates, so numerical and geometric edge cases need care when interpreting its output [1].</p>
+</section>
+<section class="report-section" id="references">
+<h2>7. Bibliography</h2>
+<ol class="source">
+<li>V. Sridhar and R. Svenning, “Fast Area-Weighted Peeling of Convex Hulls for Outlier Detection,” <em>Proceedings of the 36th Canadian Conference on Computational Geometry (CCCG)</em>, pp. 233–240, 2024. <a href="https://arxiv.org/abs/2410.04544" rel="noopener noreferrer" target="_blank">Read the paper</a>.</li>
+<li>A. M. Andrew, “Another Efficient Algorithm for Convex Hulls in Two Dimensions,” <em>Information Processing Letters</em>, vol. 9, no. 5, pp. 216–219, 1979.</li>
+</ol>
+<p class="small">The theoretical claims on area-weighted peeling are attributed to [1]. Andrew's monotone-chain method, used in the demonstration code, is cited separately in [2].</p>
+</section>
+<footer class="site-footer"><span>Geometry / Lab · INFO-F420</span><span>Based on Sridhar &amp; Svenning (2024) · <a href="#references">Bibliography</a></span></footer></main><script>
+'use strict';
+const canvas=document.getElementById('plot'),ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height,PAD=32;let initial=[],points=[],history=[],removed=[],nextId=0;
+const byId=(a,b)=>a.id-b.id;
+function cross(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x)}
+function hull(input){const s=[...input].sort((a,b)=>a.x-b.x||a.y-b.y||a.id-b.id);if(s.length<=1)return s;let lo=[],hi=[];for(const p of s){while(lo.length>=2&&cross(lo[lo.length-2],lo[lo.length-1],p)<=1e-10)lo.pop();lo.push(p)}for(let i=s.length-1;i>=0;i--){const p=s[i];while(hi.length>=2&&cross(hi[hi.length-2],hi[hi.length-1],p)<=1e-10)hi.pop();hi.push(p)}lo.pop();hi.pop();return lo.concat(hi)}
+function area(poly){if(poly.length<3)return 0;let s=0;for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length];s+=a.x*b.y-a.y*b.x}return Math.abs(s)/2}
+function bestCandidate(ps){const h=hull(ps),before=area(h);if(h.length<3||before<=1e-9)return null;let best=null;for(const p of h){const after=area(hull(ps.filter(q=>q.id!==p.id)));const d=Math.max(0,before-after);if(!best||d>best.delta+1e-8||(Math.abs(d-best.delta)<=1e-8&&p.id<best.point.id))best={point:p,delta:d,after}}return best}
+function randomGenerator(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296}}
+function generate(kind){const rnd=randomGenerator(184+['cluster','uniform','circle','collinear'].indexOf(kind));let a=[];const add=(x,y)=>a.push({id:a.length+1,x,y});if(kind==='cluster'){for(let i=0;i<40;i++){const theta=rnd()*Math.PI*2,r=Math.sqrt(rnd());add(.49+Math.cos(theta)*r*.23,.51+Math.sin(theta)*r*.23)}[[.08,.13],[.93,.16],[.91,.85],[.13,.92],[.75,.96]].forEach(p=>add(...p))}else if(kind==='uniform'){for(let i=0;i<55;i++)add(.06+.88*rnd(),.07+.86*rnd())}else if(kind==='circle'){for(let i=0;i<55;i++){const t=2*Math.PI*i/55,r=.32+.055*(rnd()-.5);add(.5+r*Math.cos(t),.5+r*Math.sin(t))}}else{for(let i=0;i<45;i++){const x=.05+.9*rnd();add(x,.20+.61*x+(rnd()-.5)*.035)}add(.18,.84);add(.84,.23)}return a}
+function line(poly,stroke,fill){if(!poly.length)return;ctx.beginPath();ctx.moveTo(PAD+poly[0].x*(W-2*PAD),PAD+(1-poly[0].y)*(H-2*PAD));for(let i=1;i<poly.length;i++)ctx.lineTo(PAD+poly[i].x*(W-2*PAD),PAD+(1-poly[i].y)*(H-2*PAD));if(poly.length>=3)ctx.closePath();if(fill&&poly.length>=3){ctx.fillStyle=fill;ctx.fill()}ctx.lineWidth=2.3;ctx.strokeStyle=stroke;ctx.stroke()}
+function dot(p,color,r){const x=PAD+p.x*(W-2*PAD),y=PAD+(1-p.y)*(H-2*PAD);ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
+function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#FAFAFF';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#E3F9F1';ctx.lineWidth=1;for(let i=0;i<=10;i++){const x=PAD+(W-2*PAD)*i/10,y=PAD+(H-2*PAD)*i/10;ctx.beginPath();ctx.moveTo(x,PAD);ctx.lineTo(x,H-PAD);ctx.moveTo(PAD,y);ctx.lineTo(W-PAD,y);ctx.stroke()}const h=hull(points),hIds=new Set(h.map(p=>p.id)),best=bestCandidate(points);line(h,'#6C4AB6','rgba(108,74,182,.11)');for(const p of removed)dot(p,'#B9B2CA',3.8);for(const p of points)dot(p,hIds.has(p.id)?'#6C4AB6':'#716A89',hIds.has(p.id)?5.2:4.1);if(best){dot(best.point,'#4CD3A6',8);ctx.strokeStyle='#4CD3A6';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(PAD+best.point.x*(W-2*PAD),PAD+(1-best.point.y)*(H-2*PAD),12,0,2*Math.PI);ctx.stroke()}document.getElementById('remaining').textContent=points.length;document.getElementById('area').textContent=area(h).toFixed(5);document.getElementById('delta').textContent=best?best.delta.toFixed(5):'–';document.getElementById('removed').textContent=removed.length;document.getElementById('candidate').textContent=best?'#'+best.point.id:'–';document.getElementById('next').disabled=!best;document.getElementById('undo').disabled=!history.length}
+function reset(ps){initial=ps.map(p=>({...p}));points=initial.map(p=>({...p}));nextId=Math.max(0,...points.map(p=>p.id));history=[];removed=[];draw()}
+document.getElementById('preset').addEventListener('change',e=>reset(generate(e.target.value)));
+document.getElementById('reset').addEventListener('click',()=>reset(initial));
+document.getElementById('next').addEventListener('click',()=>{const b=bestCandidate(points);if(!b)return;history.push(points.map(p=>({...p})));points=points.filter(p=>p.id!==b.point.id);removed.push(b.point);draw()});
+document.getElementById('undo').addEventListener('click',()=>{if(!history.length)return;points=history.pop();removed.pop();draw()});
+canvas.addEventListener('click',e=>{const rect=canvas.getBoundingClientRect(),x=((e.clientX-rect.left)*W/rect.width-PAD)/(W-2*PAD),y=1-((e.clientY-rect.top)*H/rect.height-PAD)/(H-2*PAD);if(x<0||x>1||y<0||y>1)return;reset([...initial,{id:Math.max(0,...initial.map(p=>p.id))+1,x,y}])});
+reset(generate('cluster'));
+</script></body></html>
