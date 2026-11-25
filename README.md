@@ -22,6 +22,12 @@ To run it locally, download `index.html` and open it in a web browser. No instal
 - `report/` — LaTeX report and compiled PDF.
 - `AI_JOURNAL.md` — Documentation of AI usage.
 
+
+## AI Usage
+
+The use of AI tools during the development of this
+project is documented in the [AI Usage Journal](AI_JOURNAL.md).
+
 ## Reference
 
 Sridhar, V., and Svenning, R. (2024). *Fast Area-Weighted Peeling of Convex Hulls for Outlier Detection*. Proceedings of the 36th Canadian Conference on Computational Geometry (CCCG).
