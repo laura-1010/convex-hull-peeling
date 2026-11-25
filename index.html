@@ -168,24 +168,325 @@ pre{border-left:6px solid var(--color-3);border-radius:14px}
 <p class="small">The theoretical claims on area-weighted peeling are attributed to [1]. Andrew's monotone-chain method, used in the demonstration code, is cited separately in [2].</p>
 </section>
 <footer class="site-footer"><span>Geometry / Lab · INFO-F420</span><span>Based on Sridhar &amp; Svenning (2024) · <a href="#references">Bibliography</a></span></footer></main><script>
+
 'use strict';
-const canvas=document.getElementById('plot'),ctx=canvas.getContext('2d');
-const W=canvas.width,H=canvas.height,PAD=32;let initial=[],points=[],history=[],removed=[],nextId=0;
-const byId=(a,b)=>a.id-b.id;
-function cross(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x)}
-function hull(input){const s=[...input].sort((a,b)=>a.x-b.x||a.y-b.y||a.id-b.id);if(s.length<=1)return s;let lo=[],hi=[];for(const p of s){while(lo.length>=2&&cross(lo[lo.length-2],lo[lo.length-1],p)<=1e-10)lo.pop();lo.push(p)}for(let i=s.length-1;i>=0;i--){const p=s[i];while(hi.length>=2&&cross(hi[hi.length-2],hi[hi.length-1],p)<=1e-10)hi.pop();hi.push(p)}lo.pop();hi.pop();return lo.concat(hi)}
-function area(poly){if(poly.length<3)return 0;let s=0;for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length];s+=a.x*b.y-a.y*b.x}return Math.abs(s)/2}
-function bestCandidate(ps){const h=hull(ps),before=area(h);if(h.length<3||before<=1e-9)return null;let best=null;for(const p of h){const after=area(hull(ps.filter(q=>q.id!==p.id)));const d=Math.max(0,before-after);if(!best||d>best.delta+1e-8||(Math.abs(d-best.delta)<=1e-8&&p.id<best.point.id))best={point:p,delta:d,after}}return best}
-function randomGenerator(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296}}
-function generate(kind){const rnd=randomGenerator(184+['cluster','uniform','circle','collinear'].indexOf(kind));let a=[];const add=(x,y)=>a.push({id:a.length+1,x,y});if(kind==='cluster'){for(let i=0;i<40;i++){const theta=rnd()*Math.PI*2,r=Math.sqrt(rnd());add(.49+Math.cos(theta)*r*.23,.51+Math.sin(theta)*r*.23)}[[.08,.13],[.93,.16],[.91,.85],[.13,.92],[.75,.96]].forEach(p=>add(...p))}else if(kind==='uniform'){for(let i=0;i<55;i++)add(.06+.88*rnd(),.07+.86*rnd())}else if(kind==='circle'){for(let i=0;i<55;i++){const t=2*Math.PI*i/55,r=.32+.055*(rnd()-.5);add(.5+r*Math.cos(t),.5+r*Math.sin(t))}}else{for(let i=0;i<45;i++){const x=.05+.9*rnd();add(x,.20+.61*x+(rnd()-.5)*.035)}add(.18,.84);add(.84,.23)}return a}
-function line(poly,stroke,fill){if(!poly.length)return;ctx.beginPath();ctx.moveTo(PAD+poly[0].x*(W-2*PAD),PAD+(1-poly[0].y)*(H-2*PAD));for(let i=1;i<poly.length;i++)ctx.lineTo(PAD+poly[i].x*(W-2*PAD),PAD+(1-poly[i].y)*(H-2*PAD));if(poly.length>=3)ctx.closePath();if(fill&&poly.length>=3){ctx.fillStyle=fill;ctx.fill()}ctx.lineWidth=2.3;ctx.strokeStyle=stroke;ctx.stroke()}
-function dot(p,color,r){const x=PAD+p.x*(W-2*PAD),y=PAD+(1-p.y)*(H-2*PAD);ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
-function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#FAFAFF';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#E3F9F1';ctx.lineWidth=1;for(let i=0;i<=10;i++){const x=PAD+(W-2*PAD)*i/10,y=PAD+(H-2*PAD)*i/10;ctx.beginPath();ctx.moveTo(x,PAD);ctx.lineTo(x,H-PAD);ctx.moveTo(PAD,y);ctx.lineTo(W-PAD,y);ctx.stroke()}const h=hull(points),hIds=new Set(h.map(p=>p.id)),best=bestCandidate(points);line(h,'#6C4AB6','rgba(108,74,182,.11)');for(const p of removed)dot(p,'#B9B2CA',3.8);for(const p of points)dot(p,hIds.has(p.id)?'#6C4AB6':'#716A89',hIds.has(p.id)?5.2:4.1);if(best){dot(best.point,'#4CD3A6',8);ctx.strokeStyle='#4CD3A6';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(PAD+best.point.x*(W-2*PAD),PAD+(1-best.point.y)*(H-2*PAD),12,0,2*Math.PI);ctx.stroke()}document.getElementById('remaining').textContent=points.length;document.getElementById('area').textContent=area(h).toFixed(5);document.getElementById('delta').textContent=best?best.delta.toFixed(5):'–';document.getElementById('removed').textContent=removed.length;document.getElementById('candidate').textContent=best?'#'+best.point.id:'–';document.getElementById('next').disabled=!best;document.getElementById('undo').disabled=!history.length}
-function reset(ps){initial=ps.map(p=>({...p}));points=initial.map(p=>({...p}));nextId=Math.max(0,...points.map(p=>p.id));history=[];removed=[];draw()}
-document.getElementById('preset').addEventListener('change',e=>reset(generate(e.target.value)));
-document.getElementById('reset').addEventListener('click',()=>reset(initial));
-document.getElementById('next').addEventListener('click',()=>{const b=bestCandidate(points);if(!b)return;history.push(points.map(p=>({...p})));points=points.filter(p=>p.id!==b.point.id);removed.push(b.point);draw()});
-document.getElementById('undo').addEventListener('click',()=>{if(!history.length)return;points=history.pop();removed.pop();draw()});
-canvas.addEventListener('click',e=>{const rect=canvas.getBoundingClientRect(),x=((e.clientX-rect.left)*W/rect.width-PAD)/(W-2*PAD),y=1-((e.clientY-rect.top)*H/rect.height-PAD)/(H-2*PAD);if(x<0||x>1||y<0||y>1)return;reset([...initial,{id:Math.max(0,...initial.map(p=>p.id))+1,x,y}])});
+
+// Canvas and state
+// Canvas used to draw the points and their convex hull.
+const canvas = document.getElementById('plot');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+const PAD = 32;
+
+// initial holds the original points; points holds those still in the set.
+// history stores previous states for Undo; removed tracks deleted points.
+let initial = [];
+let points = [];
+let history = [];
+let removed = [];
+let nextId = 0;
+
+const byId = (a, b) => a.id - b.id;
+
+// Geometry
+
+// Positive cross product means a counterclockwise turn;
+// negative means clockwise, and zero means collinear.
+function cross(a, b, c) {
+  return (b.x - a.x) * (c.y - a.y)
+       - (b.y - a.y) * (c.x - a.x);
+}
+
+// Andrew's monotone chain algorithm for the convex hull.
+// Build the lower and upper chains separately.
+function hull(input) {
+  const s = [...input].sort(
+    (a, b) => a.x - b.x || a.y - b.y || a.id - b.id
+  );
+
+  if (s.length <= 1) return s;
+
+  let lo = [];
+  let hi = [];
+
+  // Remove non-left turns from the lower chain.
+  for (const p of s) {
+    while (
+      lo.length >= 2 &&
+      cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 1e-10
+    ) {
+      lo.pop();
+    }
+    lo.push(p);
+  }
+
+  // Build the upper chain in reverse order.
+  for (let i = s.length - 1; i >= 0; i--) {
+    const p = s[i];
+    while (
+      hi.length >= 2 &&
+      cross(hi[hi.length - 2], hi[hi.length - 1], p) <= 1e-10
+    ) {
+      hi.pop();
+    }
+    hi.push(p);
+  }
+
+  // Drop the shared endpoints before joining the chains.
+  lo.pop();
+  hi.pop();
+  return lo.concat(hi);
+}
+
+// Polygon area using the shoelace formula.
+function area(poly) {
+  if (poly.length < 3) return 0;
+
+  let s = 0;
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i];
+    const b = poly[(i + 1) % poly.length];
+    s += a.x * b.y - a.y * b.x;
+  }
+  return Math.abs(s) / 2;
+}
+
+// Find the hull vertex with the largest area reduction.
+// Break ties using the smaller point ID.
+function bestCandidate(ps) {
+  const h = hull(ps);
+  const before = area(h);
+
+  if (h.length < 3 || before <= 1e-9) return null;
+
+  let best = null;
+  for (const p of h) {
+    // Try removing p and compute the new hull area.
+    const after = area(hull(ps.filter(q => q.id !== p.id)));
+    const d = Math.max(0, before - after);
+
+    if (
+      !best ||
+      d > best.delta + 1e-8 ||
+      (Math.abs(d - best.delta) <= 1e-8 && p.id < best.point.id)
+    ) {
+      best = { point: p, delta: d, after };
+    }
+  }
+  return best;
+}
+
+// Sample datasets
+
+// Seeded random generator for reproducible datasets.
+function randomGenerator(seed) {
+  return function () {
+    seed |= 0;
+    seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// Generate the distribution selected in the menu.
+function generate(kind) {
+  const rnd = randomGenerator(
+    184 + ['cluster', 'uniform', 'circle', 'collinear'].indexOf(kind)
+  );
+  let a = [];
+  const add = (x, y) => a.push({ id: a.length + 1, x, y });
+
+  if (kind === 'cluster') {
+    // Central cluster with a few outliers.
+    for (let i = 0; i < 40; i++) {
+      const theta = rnd() * Math.PI * 2;
+      const r = Math.sqrt(rnd());
+      add(.49 + Math.cos(theta) * r * .23, .51 + Math.sin(theta) * r * .23);
+    }
+    [[.08, .13], [.93, .16], [.91, .85], [.13, .92], [.75, .96]]
+      .forEach(p => add(...p));
+  } else if (kind === 'uniform') {
+    // Uniformly distributed points.
+    for (let i = 0; i < 55; i++) {
+      add(.06 + .88 * rnd(), .07 + .86 * rnd());
+    }
+  } else if (kind === 'circle') {
+    // Points close to a circle.
+    for (let i = 0; i < 55; i++) {
+      const t = 2 * Math.PI * i / 55;
+      const r = .32 + .055 * (rnd() - .5);
+      add(.5 + r * Math.cos(t), .5 + r * Math.sin(t));
+    }
+  } else {
+    // Nearly collinear points with two outliers.
+    for (let i = 0; i < 45; i++) {
+      const x = .05 + .9 * rnd();
+      add(x, .20 + .61 * x + (rnd() - .5) * .035);
+    }
+    add(.18, .84);
+    add(.84, .23);
+  }
+
+  return a;
+}
+
+// Drawing
+
+// Draw a polygon outline and optional fill.
+function line(poly, stroke, fill) {
+  if (!poly.length) return;
+
+  ctx.beginPath();
+  ctx.moveTo(
+    PAD + poly[0].x * (W - 2 * PAD),
+    PAD + (1 - poly[0].y) * (H - 2 * PAD)
+  );
+
+  for (let i = 1; i < poly.length; i++) {
+    ctx.lineTo(
+      PAD + poly[i].x * (W - 2 * PAD),
+      PAD + (1 - poly[i].y) * (H - 2 * PAD)
+    );
+  }
+
+  if (poly.length >= 3) ctx.closePath();
+  if (fill && poly.length >= 3) {
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+
+  ctx.lineWidth = 2.3;
+  ctx.strokeStyle = stroke;
+  ctx.stroke();
+}
+
+// Map point coordinates to canvas pixels.
+function dot(p, color, r) {
+  const x = PAD + p.x * (W - 2 * PAD);
+  const y = PAD + (1 - p.y) * (H - 2 * PAD);
+
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+// Redraw the plot and update the displayed values.
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#FAFAFF';
+  ctx.fillRect(0, 0, W, H);
+
+  // Background grid.
+  ctx.strokeStyle = '#E3F9F1';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    const x = PAD + (W - 2 * PAD) * i / 10;
+    const y = PAD + (H - 2 * PAD) * i / 10;
+
+    ctx.beginPath();
+    ctx.moveTo(x, PAD);
+    ctx.lineTo(x, H - PAD);
+    ctx.moveTo(PAD, y);
+    ctx.lineTo(W - PAD, y);
+    ctx.stroke();
+  }
+
+  // Current hull and next point to remove.
+  const h = hull(points);
+  const hIds = new Set(h.map(p => p.id));
+  const best = bestCandidate(points);
+
+  line(h, '#6C4AB6', 'rgba(108,74,182,.11)');
+
+  // Removed and remaining points.
+  for (const p of removed) dot(p, '#B9B2CA', 3.8);
+  for (const p of points) {
+    dot(p, hIds.has(p.id) ? '#6C4AB6' : '#716A89', hIds.has(p.id) ? 5.2 : 4.1);
+  }
+
+  // Highlight the next candidate in green.
+  if (best) {
+    dot(best.point, '#4CD3A6', 8);
+    ctx.strokeStyle = '#4CD3A6';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(
+      PAD + best.point.x * (W - 2 * PAD),
+      PAD + (1 - best.point.y) * (H - 2 * PAD),
+      12, 0, 2 * Math.PI
+    );
+    ctx.stroke();
+  }
+
+  // Update the metrics and button states.
+  document.getElementById('remaining').textContent = points.length;
+  document.getElementById('area').textContent = area(h).toFixed(5);
+  document.getElementById('delta').textContent = best ? best.delta.toFixed(5) : '–';
+  document.getElementById('removed').textContent = removed.length;
+  document.getElementById('candidate').textContent = best ? '#' + best.point.id : '–';
+  document.getElementById('next').disabled = !best;
+  document.getElementById('undo').disabled = !history.length;
+}
+
+// Controls
+
+// Load a dataset and clear the removal history.
+function reset(ps) {
+  initial = ps.map(p => ({ ...p }));
+  points = initial.map(p => ({ ...p }));
+  nextId = Math.max(0, ...points.map(p => p.id));
+  history = [];
+  removed = [];
+  draw();
+}
+
+// Select a different dataset.
+document.getElementById('preset').addEventListener('change', e => {
+  reset(generate(e.target.value));
+});
+
+// Reset to the original point set.
+document.getElementById('reset').addEventListener('click', () => {
+  reset(initial);
+});
+
+// Remove the current best candidate.
+document.getElementById('next').addEventListener('click', () => {
+  const b = bestCandidate(points);
+  if (!b) return;
+
+  history.push(points.map(p => ({ ...p })));
+  points = points.filter(p => p.id !== b.point.id);
+  removed.push(b.point);
+  draw();
+});
+
+// Restore the previous point set.
+document.getElementById('undo').addEventListener('click', () => {
+  if (!history.length) return;
+
+  points = history.pop();
+  removed.pop();
+  draw();
+});
+
+// Add a point on click and restart peeling.
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) * W / rect.width - PAD) / (W - 2 * PAD);
+  const y = 1 - ((e.clientY - rect.top) * H / rect.height - PAD) / (H - 2 * PAD);
+
+  if (x < 0 || x > 1 || y < 0 || y > 1) return;
+
+  reset([
+    ...initial,
+    { id: Math.max(0, ...initial.map(p => p.id)) + 1, x, y }
+  ]);
+});
+
+// Start with the cluster and outliers dataset.
 reset(generate('cluster'));
 </script></body></html>
