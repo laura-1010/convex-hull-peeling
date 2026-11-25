@@ -1,0 +1,53 @@
+\documentclass[10.5pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+\setlist{nosep}
+\pagestyle{empty}
+
+\title{\vspace{-1.5cm}\textbf{Fast Area-Weighted Peeling of Convex Hulls for Outlier Detection}\\[0.3em]
+\large INFO-F420 Computational Geometry --- Project Proposal}
+\author{Laura Rinaldi}
+\date{\vspace{-1em}}
+
+\begin{document}
+\maketitle
+\vspace{-1em}
+
+\section*{Objectives}
+The goal of this project is to study and implement the algorithm presented in “Fast Area-Weighted Peeling of Convex Hulls for Outlier Detection” by Vinesh Sridhar and Rolf Svenning (CCCG 2024). The paper introduces a geometric approach to outlier detection based on the convex hull of a two-dimensional point set. The main idea is to iteratively remove the point whose removal produces the largest decrease in the area of the convex hull.
+The project will focus on understanding the geometric principles underlying this approach, analyzing the correctness of the algorithm, and investigating how its efficiency compares with more straightforward implementations.
+
+\section*{Theoretical analysis}
+The first part of the project will focus on the main concepts presented in the paper. I will study the properties of convex hulls and how removing individual hull vertices affects the area enclosed by the hull. Particular attention will be given to the criterion used to select the next point to remove and to the geometric observations that allow the algorithm to compute these area changes efficiently.
+I will also examine the correctness arguments and the time complexity of the proposed algorithm, which achieves an O(n log⁡n )running time. Finally, I will discuss its limitations, including how the choice of area-based criterion influences the points identified as potential outliers and how the method behaves on different types of point distributions.
+
+\section*{Implementation and visualization}
+The practical part of the project will consist of implementing the algorithm and developing an interactive visualization of the convex hull peeling process.
+The visualization will allow users to generate or load a two-dimensional point set, display its convex hull, and observe how the hull changes as points are iteratively removed. At each step, the application will highlight the selected point and illustrate the corresponding reduction in hull area.
+The tool will also provide information about the area reduction at each iteration, helping users understand why certain points are removed before others. By experimenting with different point distributions and outlier configurations, users will be able to explore the behavior of the algorithm and observe how effectively it distinguishes peripheral points from the main structure of the dataset.
+
+\section*{Evaluation and expected results}
+To evaluate the implementation, I will test the algorithm on datasets with different sizes and geometric configurations. Where appropriate, I will compare the results and running times of the optimized implementation with a simpler reference implementation.
+The evaluation will focus on verifying the correctness of the implementation, observing its practical performance, and identifying cases in which area-weighted peeling produces useful or potentially unexpected results.
+The expected outcome is a working implementation accompanied by an interactive visualization that makes the algorithm's geometric principles accessible and helps illustrate its efficiency, behavior, and limitations.
+
+\begin{thebibliography}{9}\small
+\bibitem{sridhar2024} V.~Sridhar and R.~Svenning, ``Fast Area-Weighted Peeling of Convex Hulls for Outlier Detection,'' \emph{Proc.\ 36th Canadian Conference on Computational Geometry (CCCG)}, 2024.
+\end{thebibliography}
+
+\end{document}
+
+
+
+
+
+
